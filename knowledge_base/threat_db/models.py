@@ -1,41 +1,58 @@
-from django.db import models
+from django.contrib.auth import get_user_model
+from django.db import models 
 
 
-class Treat(models.Model):
-    source_id = models.CharField()
+User = get_user_model()
+
+
+class Threat(models.Model):
+    source_id = models.CharField(max_length=35) #id used in source db
+    pub_date = models.DateField('date of publication')
+
+
+class ThreatsDescription(models.Model):
+    threat = models.ForeignKey(
+        'threat_db.Threat', on_delete=models.CASCADE, 
+        related_name='related_descriptions'
+    )
     name = models.TextField() 
     description = models.TextField()    
-    sources_of_threat = models.CharField()
-    objects_of_influence = models.CharField()
+    sources_of_threat = models.TextField()
+    objects_of_influence = models.TextField()
     confidentiality_violation = models.BooleanField()
-    integrity_violance = models.BooleanField()
-    accessibility violation = models.BooleanField()
+    integrity_violation = models.BooleanField()
+    accessibility_violation = models.BooleanField()
     pub_date = models.DateField('date of publication')
-    mod_date = models.DateField('date of modification')
+
+
+class TypicalJustificationItems(models.Model):
+    threats = models.ManyToManyField('threat_db.Justification')
+    text = models.TextField()
+    pub_date = models.DateField('date of publication')
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='justification_items'
+    )
+
 
 class Justification(models.Model):
-    threat = models.ForeignKey(
-        'Treat', on_delete=models.CASCADE, related_name='related_threat'
-    )
-    mod_date = models.DateField('date of modification')
-
-
-
-     
-
-
-
-
-
-
+    pub_date = models.DateField('date of publication')
+    text = models.TextField()
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='post_author'
+        User, on_delete=models.CASCADE, related_name='justifications'
     )
-    group = models.ForeignKey(
-        'posts.Group', on_delete=models.CASCADE, blank=True, null=True, 
-        related_name='post_group'
-    )   
-    image = models.ImageField(upload_to='posts/', blank=True, null=True)
-    
-    def __str__(self):
-        return self.text
+    threat = models.ForeignKey(
+        'threat_db.Threat', on_delete=models.CASCADE, 
+        related_name='justifications'
+    )
+
+
+class approval(models.Model):
+    approval_date = models.DateField()
+    justification = models.ForeignKey(
+        'threat_db.Justification', on_delete=models.CASCADE, 
+        related_name='approval'
+    )
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='approvals'
+    )
+
